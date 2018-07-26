@@ -1,0 +1,244 @@
+1.
+文件路径
+c:\mysql\dbdata3307\conf\my.ini
+2
+启动路径
+mysqld  --defaults-file="c:\mysql\dbdata3310\conf\my.ini"
+3结束
+mysqladmin -uroot -P3307 shutdown
+
+修复
+mysql_upgrade -u root -p
+4创建数据库
+CREAT DATABASE IF NOT EXISTS 名字
+CHARACTER SET utf8设置编码方式
+5查看数据库
+SHOW DATABASE
+6 选择数据库
+USE 名字
+SELECT * from db.table;
+7删除数据库
+DROP DATABASE IF EXISTS 名字
+8 查看数据库支持储存引擎
+SHOW ENGINES//数据库内
+9 查看默认储存引擎
+SHOW VARIABLES LIKE 'storage_engine%';
+10 修改默认存储引擎通过 my.ini
+default-storage-engine=INNODB;//需要重启mysql服务器
+11 整数类型 SMALLINT MEDIUMINT INT BIGINT
+12 浮点数类型，定点数类型和位类型 FLOAT DOUBLE DEC BIT
+13 日期和时间类型 DATE DATETIME TIMESTAMP TIME YEAR//datatime 格式： ”2013-12-01 12：32：58“
+//插入当前时间 insert into 表名 values(now());
+14 字符串类型 CHAR VARCHAR TINYTEXY TEXT MEDIUMTEXT LONGTEXT BINARY VARBINARY
+//create table c_test(id char(20)); 插入时使用单引号双引号一样
+15 创建表 create table int_test(id int,id2 bigint);
+16 向表中插入数据 nsert into int_test values(1,2)；
+17 显示表中内容 select * from int_test;
+18 表的创建 CREATE TABLE IF NOT EXISTS testTable（字段定义）;
+19 表定义的查看 SHOW create table tableName；
+DESC tablename ；
+20 表定义更新 #表的重命名
+ALTER TABLE old_table_name rENAME [TO] new_table_name;
+#表结构修改
+ALTER TABLE table_name ADD 属性名 属性类型
+// alter table 表名 add/drop（删除） 属性 列名 类型 not null default 0 after 列名;//非空默认为0在...后；
+#在表的指定字段之后增加字段
+ALTER TABLE table_name ADD 属性名 属性类型
+		AFTER 属性名
+		#字段删除
+ALTER TABLE table_name     DROP 属性名
+#字段修改
+ALTER TABLE table_name MODIFY 属性名 数据类型
+21 表的删除
+DROP TABLE table_name;
+22 更改列名以及大小
+alter table 名字 change column 列名//可以不更改名字// 新名字 varchar(1024) not null default 'Beijing';
+modify不可以改列名只能更改大小
+23 创建表和之前表结构相似
+create table 新名字 like 之前的表；
+24 索引的创建
+#普通索引  //允许被索引的数据包含重复的值，如同名
+create index 索引名 on 表名（列名）；//方便查找，可以使用索引所标记的数据对信息进行定位
+explain select * from 表名 where 列名='XXX';
+explain select * from 表名 ignore 索引名 where 列名='XXX';//忽略索引进行全表扫描
+#唯一索引  //不允许被索引的数据包含重复的值
+create UNIQUE  index idx_name on table_name(column_name);
+#主键索引 //primary key
+alter table table_name add primary key (id);//在id上添加主键；
+#复合索引
+alter table table_name add index idx_name(column_name,column_name);
+查找 ...where column_name = '  ' and column_name = '   ';
+#全文索引
+例如，我们想要在article表的title和content列中全文检索指定的查询字符串，可以如下编写SQL语句：
+
+SELECT * FROM article WHERE MATCH(title, content) AGAINST('查询字符串')
+强烈注意：MySQL自带的全文索引只能用于数据库引擎为MyISAM的数据表，如果是其他数据引擎，则全文索引不会生效。
+此外，MySQL自带的全文索引只能对英文进行全文检索，目前无法对中文进行全文检索。
+如果需要对包含中文在内的文本数据进行全文检索，我们需要采用Sphinx(斯芬克斯)/Coreseek技术来处理中文。
+本站将会在后续文章中对Sphinx以及Coreseek进行介绍。
+
+备注1：目前，使用MySQL自带的全文索引时，如果查询字符串的长度过短将无法得到期望的搜索结果。
+MySQL全文索引所能找到的词的默认最小长度为4个字符。另外，如果查询的字符串包含停止词，那么该停止词将会被忽略。
+
+备注2：如果可能，请尽量先创建表并插入所有数据后再创建全文索引，
+而不要在创建表时就直接创建全文索引，因为前者比后者的全文索引效率要高。
+create  fulltext index idx_name on table_name(column_name);
+#删除索引
+drop index idx_name on table_name;
+25 视图的操作
+#创建 create view view_name() as select() from...;
+#查看 SHOW TABLE STATUS 【FROM db_name】【LIKE ‘pattern’】
+SHOW CREATE VIEW viewname
+DESCRIBE | DESC viewname
+USE information_schema;
+select *from views WHERE table_name='view_selectproduct' \G
+#修改 ALTER?VIEW?view_selectproduct?AS?SELECT?name?FROM?t_product;
+#视图作用
+1简化查询语句
+比如：有一张商品表，我们经常要查每个栏目下商品的平均价格
+select cat_id,avg(shop_price) from goods gropy by cat_id;
+这时候我们就可以创建一张视图：
+create view avgPrice as select cat_id,avg(shop_price) from goods gropy by cat_id;
+创建完，以后我们要查每个栏目的平均价格时，只要这么写
+select * from avgPrice;
+2可以进行权限控制
+比如goods商品表，一个id字段一个价格字段一个商品名称字段 
+我们不想让人看见价格 可以这样写
+create view showGoods as select id,name from goods;
+#可以使用视图直接修改表中数据，视图不储存任何数据
+26 触发器的操作 
+//触发器是一种与表操作有关的数据库对象，当触发器所在表上出现指定事件时，将调用该对象，即表的操作事件触发表上的触发器的执行。
+触发器的创建-创建有一条执行语句的触发器
+create?trigger?trigger_name
+????BEFORE|AFTER?trigger_EVENT
+????????ON TABLE_NAME FOR EACH ROW
+????????????BEGIN
+????????????trigger_STMT
+实例：
+mysql>  CREATE TRIGGER tri_test BEFORE INSERT ON t1  FOR EACH ROW
+    -> INSERT INTO t1_log VALUES(USER(),'insert record into table t1',now());
+Query OK, 0 rows affected (0.02 sec)
+mysql> insert into t1 values('1111');
+Query OK, 1 row affected, 2 warnings (0.00 sec)
+
+mysql> select * from t1_log\G
+*************************** 1. row ***************************
+  cur_user: root@localhost
+        op: insert record into table t1
+insertTime: 2013-10-18 21:02:05
+1 row in set (0.00 sec)
+2  触发器的创建-创建包含多条执行语句的触发器
+create?trigger?trigger_name
+????BEFORE|AFTER?trigger_EVENT
+????????ON TABLE_NAME FOR EACH ROW
+????????????BEGIN
+????????????trigger_STMT
+????????????END
+实例：
+
+mysql> DELIMITER $$
+mysql> CREATE TRIGGER tri_test2 BEFORE INSERT ON t1  FOR EACH ROW
+    -> Begin
+    ->     INSERT INTO t1_log VALUES(USER(),'insert record into table t1',now());
+    -> INSERT INTO t1_log VALUES(USER(),'insert record into table t1',now()); 
+    -> End
+    -> $$
+Query OK, 0 rows affected (0.01 sec)
+mysql>  DELIMITER ;
+3  触发器的查看
+1 SHOW TRIGGERS \G
+2 mysql> select * from  TRIGGERS where TRIGGER_NAME='tri_test2' \G
+*************************** 1. row ***************************
+           TRIGGER_CATALOG: NULL
+            TRIGGER_SCHEMA: test
+              TRIGGER_NAME: tri_test2
+        EVENT_MANIPULATION: INSERT
+ACTION_STATEMENT: Begin
+    INSERT INTO t1_log VALUES(USER(),'insert record into table t1',now());
+INSERT INTO t1_log VALUES(USER(),'insert record into table t1',now()); 
+End
+#触发器不能被修改，只能将原来的删除，然后重新建立新的触发器
+DROP TRIGGER trigger_name
+
+#复制表
+create 新表 like 旧表
+insert into 新表 select * from 旧表
+insert into 新表 select idx_name1,idx_name2 from 旧表//复制指定的内容
+#查询数据
+select * from table_name limit 1//只显示第一行语句
+select * from table_name limit 1，2//显示第一行之后的后面两行
+select idx_name from table_name;//查询指定列
+select idx_name from table_name where idx_name = ...and idx_name2 = ...//指定查询
+#按照指定id进行分组
+select idx_name,count(idx_name) from table_name group by idx_name;
+select idx_name,count(idx_name) as 新列名 from table_name group by idx_name having 新列名>1;
+//对分组后的数据中小于等于1的数据进行过滤
+select * from table_name from table_name order by idx_name;//按照指定的id进行排序（从大到小）
+# 更新记录 //一般情况必须加where
+update users set age=28 where id=6;
+#删除记录
+delete from table_name where idx_name=...;
+
+数据记录查询
+#查询所有字段数据
+select * from table_name
+#查询指定列
+select idx_name1,idx_name2 from table_name;
+#避免重复数据查询--distinct
+select distinct(idx_name) from table_name;//将表中一列可能有的所有情况做一个集合统计
+#字符串拼接 concat
+select CONCONCAT(CONCAT (idx_name,"....."),idx_name2) from table_name;//嵌套拼接
+#条件查询
+select * from table_name where idx_name>100 and /or ....;
+select * from table_name where idx_name between 100 and 1000;//范围查询
+where idx_name in (10,20,30,....)//相当于等于10，20，30；也可使用not in 做相反操作
+#使用like'...';  %为通配符，即任意多个任意字符
+\%转义百分号，表示百分号本身
+#order by 对数据进行排序，默认为升序排列，使用desc加在最后变为降序排列
+#select count(idx_name) from table_name;//count()函数对数据的个数进行统计//count不会记录NULL
+#select sum()/max()/min()/avg() from table_name;//实现不同函数功能，并可以在一个语句中使用，也可相互间进行计算
+#对数据进行分组并计数每个组有多少人
+select idx_name,count(1) from table_name group by idx_name;
+//当count的参数是具体值时（如count(1)，count('a')），count的参数已没有实际意义了。按照group by所指定的值进行计数
+//即执行count操作分组，存在疑问？？？
+#功能分组查询
+select group_concat(idx_name1) from table_name where Condition group by idx_name2;
+//筛选出所有在不同idx_name2下的所有idx_name1，会显示重复；
+//可以在语句中变为concat(distinct(idx_name1))则可以去重；
+#having 主要用于在group by的结果集上进行过滤
+！！！#多表查询
+###内连接查询————等值连接；###可使用类似面向对象方式进行
+select a.idx_name1,b.idx_name2 from table_name1 a,table_name2 b where ...
+###合并查询  可将不同表的内容合并为一张表
+select * from table_name1
+UNION
+select * from table_name2;//可得到两张合并后的表
+###子查询————返回结果为单行单列子查询
+当子查询的返回结果为单行单列数据记录时，该子查询语句一般会在主查询语句的where子句里，通常会
+包含不叫运算符号等
+#select * from table_name where idx_name>(select idx_name from table_name where ...);
+//比如求一个公司中的高于某人工资的所有人
+###返回结果为多行单列的子查询-带有关键字in的子查询
+当主查询的条件在子查询的查询结果中时，就可以通过关键字in来进行判断。相反，可以使用not in 来判断
+select * from table_name where idx_name in (select idx_name from idx_name2);
+###返回结果为多行单列的子查询-带有关键字any的子查询
+any可为任何值，字符串，数字等,主要用于嵌套判断条件；
+select * from table_name where idx_name >/</= ANY (select * from table_name where....);
+如>,则选中比子查询中返回的数据记录中最小的大的数据！！
+###关键字ALL 用来表示主查询的条件为满足子查询返回查询结果中所有数据记录，该关键字有两种匹配方式，分别为：
+>ALL，<ALL :以大于ALL为例，比子查询中返回数据记录中最大的还要大的数据；
+###关键字EXISTS 表示一种布尔类型，当返回结果集为TRUE，不能返回结果集是为FALSE.
+查询时EXISTS对外表采用遍历方式逐条查询，每次查询都会比较EXISTS的条件语句，当EXISTS里的条件语句返回记录
+时则条件为真，此时返回当前遍历到的记录，反之如果EXISTS里的条件语句不能返回记录行，则丢弃当前遍历到的记录
+###运算符 <>不等于 
+
+#mysql函数
+
+#合并字符串函数CONCAT()，CONCAT_WS();
+select CONCAT_WS("字符","str","ing");//输出str字符ing；加上ws为插入分隔符函数；
+#字符串大小比较函数STRCMP(),大于则返回1，小于-1，等于0；
+#字符串长度计算函数length();//空格也算，以byte数进行计数
+#CHAR_LENGTH()用于计算字符串长度，与length的区别在于以字符个数计数而不以字符所占空间计数
+
+
+
